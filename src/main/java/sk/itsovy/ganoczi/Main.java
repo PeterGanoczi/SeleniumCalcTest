@@ -40,46 +40,133 @@ public class Main {
         WebElement calculateBtn = driver.findElement(By.id("btnsubmit"));
         WebElement result = driver.findElement(By.id("result"));
 
-        Random rnd = new Random();
+
         String amountErrorMsg = "Amount must be a number between 0 and 1000000 !";
         String interestErrorMsg = "Interest must be a number between 0 and 100 !";
         String agreementErrorMsg = "You must agree to the processing !";
-        String periodString;
+
         String red = "rgba(255, 0, 0, 1)";
-        String darkGreen = "rgba(0, 100, 0, 1)";
+        String green = "rgba(0, 100, 0, 1)";
 
+        Random rnd = new Random();
         //default state
-        entry(errorMessage, amount, interest, periodRng, periodLbl, taxYes, taxNo, agreement, result);
+        //entry(errorMessage, amount, interest, periodRng, periodLbl, taxYes, taxNo, agreement, result);
 
-        //calculation with right result
-        int tax = 1;
-        for (int i = 10; i > 0; i--) {
-            double amountDbl = rnd.nextInt(1000000), interestDbl = rnd.nextInt(100), t = 0, expectedAmount = amountDbl, expectedProfit = 0;
-            int periodInt = rnd.nextInt(4)+1;
-            amount.sendKeys(String.valueOf(amountDbl));
-            interest.sendKeys(String.valueOf(interestDbl));
-            for (int x = 1; x < periodInt; x++) periodRng.sendKeys(Keys.RIGHT);
-            if (tax == 1) {
-                taxYes.click();
-                tax = 0;
-                t = 0.2;
-            } else {
-                taxNo.click();
-                tax = 1;
-                t = 0;
-            }
-            agreement.click();
-            calculateBtn.click();
-            for (int x = 0; x < periodInt; x++) expectedAmount *= (1 + (1 - t) * interestDbl / 100);
-            expectedProfit = expectedAmount - amountDbl;
-            BigDecimal roundA = new BigDecimal(expectedAmount);
-            BigDecimal roundP = new BigDecimal(expectedProfit);
-            roundA = roundA.setScale(2, RoundingMode.HALF_UP);
-            roundP = roundP.setScale(2, RoundingMode.HALF_UP);
-            Assert.assertTrue(result.isDisplayed());
-            Assert.assertEquals(result.getCssValue("color"), darkGreen);
-            resetBtn.click();
+        // Success case
+        amount.sendKeys("1000");
+        interest.sendKeys("10");
+        for (int i=2; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
         }
+        taxYes.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 1259.71 , net profit : 259.71");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Success case
+        amount.sendKeys("600000");
+        interest.sendKeys("15");
+        for (int i=4; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxYes.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 1057405.01 , net profit : 457405.01");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Success case
+        amount.sendKeys("35000");
+        interest.sendKeys("1");
+
+        periodRng.sendKeys(Keys.RIGHT);
+
+        taxYes.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 35562.24 , net profit : 562.24");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Success case
+        amount.sendKeys("1000000");
+        interest.sendKeys("99");
+        for (int i=3; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxYes.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 10312216.48 , net profit : 9312216.48");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Success case without taxes
+        amount.sendKeys("98752");
+        interest.sendKeys("7");
+        for (int i=2; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxNo.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 120975.44 , net profit : 22223.44");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Success case without taxes
+        amount.sendKeys("123456");
+        interest.sendKeys("13");
+        for (int i=4; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxNo.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertEquals(result.getText(), "Total amount : 227459.69 , net profit : 104003.69");
+        Assert.assertEquals(result.getCssValue("color"), green);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Failure case
+        amount.sendKeys("-12000");
+        interest.sendKeys("013");
+        for (int i=4; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxNo.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertTrue(errorMessage.isDisplayed());
+        Assert.assertEquals(errorMessage.getCssValue("color"), red);
+        Assert.assertEquals(errorMessage.getText(), amountErrorMsg);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+        // Failure case
+        amount.sendKeys("-12sde");
+        interest.sendKeys("-10");
+        for (int i=4; i>0;i--){
+            periodRng.sendKeys(Keys.RIGHT);
+        }
+        taxNo.click();
+        agreement.click();
+        calculateBtn.click();
+        Assert.assertTrue(errorMessage.isDisplayed());
+        Assert.assertEquals(errorMessage.getCssValue("color"), red);
+        Assert.assertEquals(errorMessage.getText(), amountErrorMsg + "\n"+interestErrorMsg);
+        Thread.sleep(2000);
+        resetBtn.click();
+
+
 
         //empty form
         calculateBtn.click();
@@ -93,6 +180,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), amountErrorMsg + "\n" + interestErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
 
@@ -103,6 +191,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), amountErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
         //empty interest
@@ -112,6 +201,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), interestErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
         //nesúhlasí sa
@@ -121,6 +211,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), agreementErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
         //negative amount
@@ -131,6 +222,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), amountErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
         //negative interest
@@ -141,6 +233,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), interestErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
         //interest above hundred
@@ -151,6 +244,7 @@ public class Main {
         Assert.assertTrue(errorMessage.isDisplayed());
         Assert.assertEquals(errorMessage.getCssValue("color"), red);
         Assert.assertEquals(errorMessage.getText(), interestErrorMsg);
+        Thread.sleep(2000);
         resetBtn.click();
 
 
@@ -160,6 +254,7 @@ public class Main {
         taxNo.click();
         Assert.assertFalse(taxYes.isSelected());
         Assert.assertTrue(taxNo.isSelected());
+        Thread.sleep(2000);
         resetBtn.click();
 
         //reset changes values to default
@@ -167,6 +262,7 @@ public class Main {
         interest.sendKeys(String.valueOf(rnd.nextInt(100)));
         agreement.click();
         calculateBtn.click();
+        Thread.sleep(2000);
         resetBtn.click();
         entry(errorMessage, amount, interest, periodRng, periodLbl, taxYes, taxNo, agreement, result);
 
